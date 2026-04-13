@@ -36,11 +36,33 @@ alpha_hunter/
 └── requirements.txt         # 依赖
 ```
 
-## 安装
+## 环境配置
+
+### 1. 创建虚拟环境
 
 ```bash
 cd alpha_hunter
+
+# 使用 venv
+python -m venv venv
+
+# 激活虚拟环境
+# macOS/Linux:
+source venv/bin/activate
+# Windows:
+venv\Scripts\activate
+```
+
+### 2. 安装依赖
+
+```bash
 pip install -r requirements.txt
+```
+
+### 3. 验证安装
+
+```bash
+python -c "from src.scanner.binance_alpha import BinanceAlphaScanner; print('OK')"
 ```
 
 ## 配置
@@ -62,9 +84,24 @@ runtime:
 
 ## 运行
 
+### 前台运行
+
 ```bash
 python main.py
 ```
+
+### 后台运行
+
+```bash
+# 使用 nohup
+nohup python main.py > /dev/null 2>&1 &
+
+# 或使用 screen
+screen -S alpha_hunter
+python main.py
+# Ctrl+A, D 退出 screen
+```
+
 
 ## 数据源
 
