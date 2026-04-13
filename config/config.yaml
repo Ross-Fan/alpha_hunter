@@ -1,0 +1,79 @@
+# ============================================
+# Alpha Hunter 配置文件
+# Binance Alpha 潜力币种监控系统
+# ============================================
+
+# 扫描器配置
+scanner:
+  # 支持的链（Phase 1 只启用 BSC）
+  chains:
+    - "bsc"
+    # - "base"    # Phase 2
+    # - "solana"  # Phase 2
+
+  # 市值过滤（USD）
+  min_market_cap: 1000000      # $1M
+  max_market_cap: 30000000     # $30M
+
+  # 流动性过滤
+  min_liquidity: 100000        # $100K
+
+# 安全检查配置
+security:
+  # 最大可接受买卖税
+  max_buy_tax: 0.10            # 10%
+  max_sell_tax: 0.10           # 10%
+
+  # 必须开源
+  require_open_source: true
+
+  # 拒绝蜜罐
+  reject_honeypot: true
+
+# 评分配置
+scoring:
+  # 安全评分权重
+  security_weight: 20
+
+  # 持币人数变化（理想区间：温和增长）
+  holders_change_ideal_min: 0.0
+  holders_change_ideal_max: 0.2   # 0-20% 增长为健康
+  holders_change_weight: 15
+
+  # 流动性变化
+  liquidity_change_ideal_min: 0.0
+  liquidity_change_ideal_max: 0.3
+  liquidity_change_weight: 10
+
+  # 成交量/市值比（活跃度）
+  volume_ratio_ideal_min: 0.05
+  volume_ratio_ideal_max: 0.3
+  volume_ratio_weight: 10
+
+  # 市值评分
+  market_cap_tier1_max: 10000000   # $10M 以下加满分
+  market_cap_tier2_max: 20000000   # $20M 以下加部分分
+  market_cap_weight: 10
+
+# 运行配置
+runtime:
+  scan_interval: 3600          # 扫描间隔（秒）= 1小时
+  output_top_n: 20             # 输出 Top N 候选
+
+# API 限流
+rate_limit:
+  binance_alpha: 1             # 每秒请求数
+  gecko_terminal: 0.15         # 每秒请求数（~10/min）
+  goplus: 1                    # 每秒请求数
+
+# 日志配置
+logging:
+  level: "INFO"                # DEBUG, INFO, WARNING, ERROR
+  console: true                # 输出到控制台
+  file: true                   # 输出到文件
+  rotation: "10 MB"            # 日志轮转大小
+  retention: "7 days"          # 日志保留时间
+
+# 数据存储配置
+storage:
+  cleanup_days: 7              # 快照保留天数

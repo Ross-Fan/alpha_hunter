@@ -1,0 +1,11 @@
+# Alpha Hunter 依赖
+
+# 异步 HTTP 客户端
+aiohttp>=3.9.0
+
+# 配置管理
+pyyaml>=6.0
+python-dotenv>=1.0.0
+
+# 日志
+loguru>=0.7.0
