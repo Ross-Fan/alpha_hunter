@@ -94,7 +94,8 @@ python main.py
 
 ```bash
 # 使用 nohup
-nohup python main.py > /dev/null 2>&1 &
+nohup python3 main.py > /dev/null 2>&1 &
+nohup python3 main.py 2>&1 &
 
 # 或使用 screen
 screen -S alpha_hunter

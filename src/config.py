@@ -157,6 +157,11 @@ class Config:
         """最小流动性"""
         return self.scanner.get('min_liquidity', 100_000)
 
+    @property
+    def raw(self) -> Dict[str, Any]:
+        """返回原始配置字典"""
+        return self._config
+
 
 # 全局配置实例
 config = Config()
