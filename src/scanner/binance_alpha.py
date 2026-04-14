@@ -47,6 +47,11 @@ class BinanceAlphaScanner(BaseScanner):
             chain_ids = Chain.get_chain_ids(chain_name)
             self._supported_chain_ids.update(chain_ids)
 
+        # 股票锚定代币过滤配置
+        filters = config.raw.get('scanner', {}).get('filters', {})
+        self._exclude_stock_tokens = filters.get('exclude_stock_tokens', True)
+        self._stock_token_suffix = filters.get('stock_token_suffix', 'on')
+
     async def start(self) -> None:
         """启动扫描器"""
         if self._session is None:
@@ -57,6 +62,28 @@ class BinanceAlphaScanner(BaseScanner):
         logger.info("Binance Alpha 扫描器已启动")
         logger.info(f"  支持的链 ID: {self._supported_chain_ids}")
         logger.info(f"  市值范围: ${self._min_market_cap/1e6:.1f}M - ${self._max_market_cap/1e6:.1f}M")
+        if self._exclude_stock_tokens:
+            logger.info(f"  过滤股票代币: 后缀 '{self._stock_token_suffix}'")
+
+    def _is_stock_token(self, symbol: str) -> bool:
+        """
+        检查是否为股票锚定代币
+
+        股票锚定代币特征：symbol 以特定后缀结尾（如 'on'）
+        例如: ONDSon, COSTon, ASMLon, NVDAon 等
+
+        Args:
+            symbol: 代币符号
+
+        Returns:
+            True 如果是股票锚定代币
+        """
+        if not symbol or not self._stock_token_suffix:
+            return False
+
+        # 检查是否以指定后缀结尾（区分大小写，因为正常代币一般全大写）
+        # 股票代币格式: 大写股票代码 + 小写 'on'
+        return symbol.endswith(self._stock_token_suffix)
 
     async def stop(self) -> None:
         """停止扫描器"""
@@ -110,6 +137,7 @@ class BinanceAlphaScanner(BaseScanner):
             'chain': 0,
             'market_cap_low': 0,
             'market_cap_high': 0,
+            'stock_token': 0,
             'passed': 0,
         }
 
@@ -118,6 +146,12 @@ class BinanceAlphaScanner(BaseScanner):
             chain_id = str(t.get('chainId', '')).lower()
             if chain_id not in self._supported_chain_ids:
                 filtered_stats['chain'] += 1
+                continue
+
+            # 股票锚定代币过滤（如 ONDSon, COSTon, ASMLon）
+            symbol = t.get('symbol', '')
+            if self._exclude_stock_tokens and self._is_stock_token(symbol):
+                filtered_stats['stock_token'] += 1
                 continue
 
             # 市值过滤
@@ -158,6 +192,7 @@ class BinanceAlphaScanner(BaseScanner):
         logger.info(
             f"筛选结果: 通过 {filtered_stats['passed']} | "
             f"链不匹配 {filtered_stats['chain']} | "
+            f"股票代币 {filtered_stats['stock_token']} | "
             f"市值过低 {filtered_stats['market_cap_low']} | "
             f"市值过高 {filtered_stats['market_cap_high']}"
         )
@@ -218,6 +253,11 @@ class BinanceAlphaScanner(BaseScanner):
 
             # 只过滤链，不过滤市值
             if chain_id not in self._supported_chain_ids:
+                continue
+
+            # 股票锚定代币过滤
+            symbol = t.get('symbol', '')
+            if self._exclude_stock_tokens and self._is_stock_token(symbol):
                 continue
 
             token = TokenInfo(

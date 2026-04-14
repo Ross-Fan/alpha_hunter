@@ -12,11 +12,18 @@ scanner:
     # - "solana"  # Phase 2
 
   # 市值过滤（USD）
-  min_market_cap: 1000000      # $1M
+  min_market_cap: 500000      # $1M
   max_market_cap: 30000000     # $30M
 
   # 流动性过滤
   min_liquidity: 100000        # $100K
+
+  # 代币过滤
+  filters:
+    # 排除股票锚定代币（如 ONDSon, COSTon, ASMLon 等跟随美股的代币）
+    exclude_stock_tokens: true
+    # 股票代币后缀模式
+    stock_token_suffix: "on"
 
 # 安全检查配置
 security:

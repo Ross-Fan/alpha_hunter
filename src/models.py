@@ -101,34 +101,38 @@ class TokenInfo:
 
 @dataclass
 class SecurityInfo:
-    """代币安全检查结果"""
+    """
+    代币安全检查结果
+
+    注意：Optional 字段为 None 表示 API 未返回该数据，需要保守处理
+    """
     contract_address: str
     chain: Chain
 
-    # GoPlus 检查项
-    is_open_source: bool = False
-    is_proxy: bool = False
-    is_mintable: bool = False
-    can_take_back_ownership: bool = False
-    owner_change_balance: bool = False
-    hidden_owner: bool = False
-    selfdestruct: bool = False
-    external_call: bool = False
-    honeypot: bool = False
+    # GoPlus 检查项 - None 表示未知（需保守处理）
+    is_open_source: Optional[bool] = None
+    is_proxy: Optional[bool] = None
+    is_mintable: Optional[bool] = None
+    can_take_back_ownership: Optional[bool] = None
+    owner_change_balance: Optional[bool] = None
+    hidden_owner: Optional[bool] = None
+    selfdestruct: Optional[bool] = None
+    external_call: Optional[bool] = None
+    honeypot: Optional[bool] = None
 
-    # 交易税
-    buy_tax: float = 0.0
-    sell_tax: float = 0.0
+    # 交易税 - None 表示未知
+    buy_tax: Optional[float] = None
+    sell_tax: Optional[float] = None
 
     # 持有者信息
     holder_count: int = 0
     lp_holder_count: int = 0
-    is_in_dex: bool = False
+    is_in_dex: Optional[bool] = None
 
     # 综合评估
     risk_level: RiskLevel = RiskLevel.UNKNOWN
     risk_score: int = 0  # 0-100, 越低越安全
-    risk_items: Dict[str, bool] = field(default_factory=dict)
+    risk_items: Dict[str, Any] = field(default_factory=dict)  # 包含未知状态
 
     # 元数据
     last_check: float = 0.0
@@ -186,11 +190,11 @@ class AlphaCandidate:
     # Alpha 评分
     alpha_score: float = 0.0  # 0-100
 
-    # 变化追踪（24小时）
-    holders_change_24h: float = 0.0
-    liquidity_change_24h: float = 0.0
-    volume_change_24h: float = 0.0
-    price_change_24h: float = 0.0
+    # 变化追踪（24小时）- None 表示数据不足无法计算
+    holders_change_24h: Optional[float] = None
+    liquidity_change_24h: Optional[float] = None
+    volume_change_24h: Optional[float] = None
+    price_change_24h: Optional[float] = None
 
     # 计算指标
     volume_ratio: float = 0.0  # 成交量/市值比

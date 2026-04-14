@@ -177,6 +177,12 @@ class AlphaStorage:
         """
         import json
 
+        def _bool_to_db(value: Optional[bool]) -> Optional[int]:
+            """将 Optional[bool] 转换为数据库值: True->1, False->0, None->None"""
+            if value is None:
+                return None
+            return 1 if value else 0
+
         with sqlite3.connect(self.db_path) as conn:
             conn.execute('''
                 INSERT OR REPLACE INTO security
@@ -186,10 +192,10 @@ class AlphaStorage:
             ''', (
                 security.contract_address,
                 security.chain.value,
-                1 if security.is_open_source else 0,
-                1 if security.is_mintable else 0,
-                1 if security.honeypot else 0,
-                security.buy_tax,
+                _bool_to_db(security.is_open_source),
+                _bool_to_db(security.is_mintable),
+                _bool_to_db(security.honeypot),
+                security.buy_tax,  # None 会被存为 NULL
                 security.sell_tax,
                 security.risk_score,
                 security.risk_level.value,
@@ -279,7 +285,7 @@ class AlphaStorage:
         contract_address: str,
         field: str,
         hours: int = 24
-    ) -> float:
+    ) -> Optional[float]:
         """
         计算指定时间范围内的变化率
 
@@ -289,12 +295,13 @@ class AlphaStorage:
             hours: 回溯小时数
 
         Returns:
-            变化率（小数形式），如果数据不足返回 0
+            变化率（小数形式），如果数据不足返回 None
         """
         snapshots = self.get_snapshots_range(contract_address, hours)
 
         if len(snapshots) < 2:
-            return 0.0
+            # 数据不足，无法计算变化率
+            return None
 
         old_snapshot = snapshots[0]
         new_snapshot = snapshots[-1]
@@ -303,13 +310,20 @@ class AlphaStorage:
         new_value = getattr(new_snapshot, field, 0)
 
         if old_value == 0:
-            return 0.0
+            # 旧值为0，无法计算变化率
+            return None
 
         return (new_value - old_value) / old_value
 
     def get_security(self, contract_address: str) -> Optional[SecurityInfo]:
         """获取安全检查结果"""
         import json
+
+        def _db_to_bool(value) -> Optional[bool]:
+            """将数据库值转换为 Optional[bool]: 1->True, 0->False, None->None"""
+            if value is None:
+                return None
+            return bool(value)
 
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
@@ -325,10 +339,10 @@ class AlphaStorage:
             return SecurityInfo(
                 contract_address=row['contract_address'],
                 chain=Chain.from_string(row['chain']),
-                is_open_source=bool(row['is_open_source']),
-                is_mintable=bool(row['is_mintable']),
-                honeypot=bool(row['honeypot']),
-                buy_tax=row['buy_tax'],
+                is_open_source=_db_to_bool(row['is_open_source']),
+                is_mintable=_db_to_bool(row['is_mintable']),
+                honeypot=_db_to_bool(row['honeypot']),
+                buy_tax=row['buy_tax'],  # None 保持为 None
                 sell_tax=row['sell_tax'],
                 risk_score=row['risk_score'],
                 risk_level=RiskLevel(row['risk_level']),

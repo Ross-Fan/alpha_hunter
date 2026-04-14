@@ -222,23 +222,33 @@ class AlphaHunter:
         h_max = cfg.get('holders_change_ideal_max', 0.2)
         h_weight = cfg.get('holders_change_weight', 15)
 
-        if h_min <= c.holders_change_24h <= h_max:
-            score += h_weight
-            breakdown['holders_change'] = h_weight
-        elif c.holders_change_24h > h_max:
-            # 增长过快，可能已经热了
-            penalty = min(h_weight, h_weight * (c.holders_change_24h - h_max) / h_max)
-            score -= penalty
-            breakdown['holders_change_penalty'] = -penalty
+        if c.holders_change_24h is not None:
+            # 有历史数据，根据变化率评分
+            if h_min <= c.holders_change_24h <= h_max:
+                score += h_weight
+                breakdown['holders_change'] = h_weight
+            elif c.holders_change_24h > h_max:
+                # 增长过快，可能已经热了
+                penalty = min(h_weight, h_weight * (c.holders_change_24h - h_max) / h_max)
+                score -= penalty
+                breakdown['holders_change_penalty'] = -penalty
+        else:
+            # 无历史数据，不加分也不扣分
+            breakdown['holders_change'] = 0
 
         # 流动性变化
         l_min = cfg.get('liquidity_change_ideal_min', 0)
         l_max = cfg.get('liquidity_change_ideal_max', 0.3)
         l_weight = cfg.get('liquidity_change_weight', 10)
 
-        if l_min <= c.liquidity_change_24h <= l_max:
-            score += l_weight
-            breakdown['liquidity_change'] = l_weight
+        if c.liquidity_change_24h is not None:
+            # 有历史数据
+            if l_min <= c.liquidity_change_24h <= l_max:
+                score += l_weight
+                breakdown['liquidity_change'] = l_weight
+        else:
+            # 无历史数据
+            breakdown['liquidity_change'] = 0
 
         # 成交量/市值比
         v_min = cfg.get('volume_ratio_ideal_min', 0.05)
@@ -278,7 +288,7 @@ class AlphaHunter:
         for i, c in enumerate(candidates, 1):
             # 控制台输出
             risk = c.security.risk_level.value if c.security else 'N/A'
-            holders_chg = f"{c.holders_change_24h:+.1%}" if c.holders_change_24h else "N/A"
+            holders_chg = f"{c.holders_change_24h:+.1%}" if c.holders_change_24h is not None else "N/A"
 
             logger.info(
                 f"{i:2d}. {c.token.symbol:12s} | "
